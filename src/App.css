@@ -8,7 +8,7 @@
 .board {
   display: flex;
   gap: 5px;
-  --size: 50px;
+  --size: 25px;
 }
 
 .row {
