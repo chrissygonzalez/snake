@@ -1,50 +1,34 @@
 import { useState, useEffect, useCallback } from 'react';
 
-const initializeBoard = (width: number, height: number): [any[][], number[][], string[]] => {
-    const grid = Array.from(Array(width).fill(null),
-        (_) => Array(height).fill(null));
+let snakeDirection = 'UP';
 
-    const midPtX = Math.floor(width / 2);
-    const midPtY = Math.floor(height / 2);
-    const snakeSquares = [[midPtX, midPtY], [midPtX, midPtY + 1], [midPtX, midPtY + 2], [midPtX, midPtY + 3]];
-    const snakeStrings = [`${midPtX}-${midPtY}`, `${midPtX}-${midPtY + 1}`, `${midPtX}-${midPtY + 2}`, `${midPtX}-${midPtY + 3}`];
-    return [grid, snakeSquares, snakeStrings];
-}
-
-const getNextPosition = (x: number, y: number, direction: string) => {
-    if (direction === 'UP') {
+const getNextPosition = (x: number, y: number) => {
+    if (snakeDirection === 'UP') {
         return [x, y - 1];
     }
-    if (direction === 'RIGHT') {
+    if (snakeDirection === 'RIGHT') {
         return [x + 1, y];
     }
-    if (direction === 'LEFT') {
+    if (snakeDirection === 'LEFT') {
         return [x - 1, y];
     }
-    if (direction === 'DOWN') {
+    if (snakeDirection === 'DOWN') {
         return [x, y + 1];
     }
     return [x, y];
 }
 
-let snakeDirection = 'UP';
-
-const Board = ({ width = 35, height = 35 }) => {
-    const [matrix, setMatrix] = useState<any[]>(initializeBoard(width, height)[0]);
-
-    let snakeArr = initializeBoard(width, height)[1];
-    let snakeSet = new Set(initializeBoard(width, height)[2]);
-
-    const getSnakeDirection = () => {
-        console.log("getting snake direction", snakeDirection);
-        return snakeDirection;
-    }
+const Board = ({ initMatrix, initSnakeArr, initSnakeSet }: { initMatrix: any[][], initSnakeArr: any[], initSnakeSet: Set<string> }) => {
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [matrix, setMatrix] = useState<any[]>(initMatrix);
+    let snakeArr = initSnakeArr;
+    let snakeSet = initSnakeSet;
 
     const updateSnakePosition = () => {
-        console.log("updating snake position");
+        // console.log("updating snake position");
         let updatedSnake: number[][] = [...snakeArr];
         const [headX, headY] = updatedSnake[0];
-        const [newX, newY] = getNextPosition(headX, headY, getSnakeDirection());
+        const [newX, newY] = getNextPosition(headX, headY);
         updatedSnake.unshift([newX, newY]);
         const [tailX, tailY] = updatedSnake.pop() || [];
         snakeArr = updatedSnake;
@@ -56,7 +40,7 @@ const Board = ({ width = 35, height = 35 }) => {
     };
 
     const updateMatrix = () => {
-        console.log("updating matrix");
+        // console.log("updating matrix");
         updateSnakePosition();
         setMatrix(matrix => {
             let updatedMatrix = [...matrix];
@@ -73,23 +57,48 @@ const Board = ({ width = 35, height = 35 }) => {
         });
     };
 
-    let timer;
-    const handleStartGame = () => {
-        timer = setInterval(updateMatrix, 1000);
+    const handleKeyDown = (e: KeyboardEvent) => {
+        // console.log(e.key);
+        if (e.key === "ArrowUp") {
+            if (snakeDirection !== 'UP' && snakeDirection !== 'DOWN') snakeDirection = 'UP';
+        }
+        if (e.key === "ArrowDown") {
+            if (snakeDirection !== 'UP' && snakeDirection !== 'DOWN') snakeDirection = 'DOWN';
+        }
+        if (e.key === "ArrowLeft") {
+            if (snakeDirection !== 'LEFT' && snakeDirection !== 'RIGHT') snakeDirection = 'LEFT';
+        }
+        if (e.key === "ArrowRight") {
+            if (snakeDirection !== 'LEFT' && snakeDirection !== 'RIGHT') snakeDirection = 'RIGHT';
+        }
     }
+
+    useEffect(() => {
+        let timer = 0;
+        if (isPlaying) {
+            timer = setInterval(updateMatrix, 1000);
+        }
+
+        return () => clearInterval(timer);
+    }, [isPlaying]);
+
+    useEffect(() => {
+        document.addEventListener('keydown', handleKeyDown);
+
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, []);
 
     return (
         <>
-            <div><button onClick={handleStartGame}>Start game</button></div>
-            <button disabled={snakeDirection === 'RIGHT' || snakeDirection === 'LEFT'} onClick={() => snakeDirection = "LEFT"}>Move Left</button>
-            <button disabled={snakeDirection === 'DOWN' || snakeDirection === 'UP'} onClick={() => snakeDirection = "UP"}>Move Up</button>
-            <button disabled={snakeDirection === 'UP' || snakeDirection === 'DOWN'} onClick={() => snakeDirection = "DOWN"}>Move Down</button>
-            <button disabled={snakeDirection === 'LEFT' || snakeDirection === 'RIGHT'} onClick={() => snakeDirection = "RIGHT"}>Move Right</button>
+            <div>
+                <button onClick={() => setIsPlaying(true)}>Start game</button>
+                <button onClick={() => setIsPlaying(false)}>Stop game</button>
+            </div>
             <div className="board">
-                {matrix.map(row =>
-                    <div className="row">
-                        {row.map((square: String) =>
-                            <div className={square === 'S' ? "snake" : 'square'}>{square}</div>
+                {matrix.map((row, rowIndex) =>
+                    <div key={rowIndex} className="row">
+                        {row.map((square: string, squareIndex: number) =>
+                            <div key={`${rowIndex}-${squareIndex}`} className={square === 'S' ? "snake" : 'square'}>{square}</div>
                         )}
                     </div>)}
             </div>
