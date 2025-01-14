@@ -1,16 +1,15 @@
-import { useState } from 'react'
 import Board from './components/Board'
 import './App.css'
 
-const width = 35;
-const height = 35;
+const WIDTH = 35;
+const HEIGHT = 35;
 
-const initializeBoard = (width: number, height: number): [any[][], number[][], Set<string>] => {
+const initializeBoard = (): [any[][], number[][], Set<string>] => {
   console.log("calling init");
-  const grid = Array.from(Array(width).fill(null),
-    (_) => Array(height).fill(null));
-  const midPtX = Math.floor(width / 2);
-  const midPtY = Math.floor(height / 2);
+  const grid = Array.from(Array(WIDTH).fill(null),
+    (_) => Array(HEIGHT).fill(null));
+  const midPtX = Math.floor(WIDTH / 2);
+  const midPtY = Math.floor(HEIGHT / 2);
   const snakeSquares = [[midPtX, midPtY], [midPtX, midPtY + 1], [midPtX, midPtY + 2], [midPtX, midPtY + 3]];
   const snakeSet = new Set(snakeSquares.map(s => `${s[0]}-${s[1]}`));
   for (let i = 0; i < grid.length; i++) {
@@ -26,7 +25,7 @@ const initializeBoard = (width: number, height: number): [any[][], number[][], S
 }
 
 function App() {
-  const [initMatrix, initSnakeArr, initSnakeSet] = initializeBoard(width, height);
+  const [initMatrix, initSnakeArr, initSnakeSet] = initializeBoard();
 
   return (
     <div><Board initMatrix={initMatrix} initSnakeArr={initSnakeArr} initSnakeSet={initSnakeSet} /></div>
