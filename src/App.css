@@ -32,7 +32,9 @@
 }
 
 .snake {
-  width: var(--size);
-  height: var(--size);
   background-color: greenyellow;
+}
+
+.food {
+  background-color: red;
 }
