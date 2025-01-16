@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 
+const SNAKE_SPEED = 100;
 let snakeDirection = 'UP';
 
 const getNextPosition = (x: number, y: number) => {
@@ -20,14 +21,19 @@ const getNextPosition = (x: number, y: number) => {
 
 const Board = ({ initMatrix, initSnakeArr, initSnakeSet }: { initMatrix: any[][], initSnakeArr: any[], initSnakeSet: Set<string> }) => {
     const [isPlaying, setIsPlaying] = useState(false);
+    const [isLose, setIsLose] = useState(false);
     const [matrix, setMatrix] = useState<any[]>(initMatrix);
     let snakeArr = initSnakeArr;
     let snakeSet = initSnakeSet;
 
-    const isWall = ([x, y]: [x: number, y: number]): boolean => {
+    const isWall = (x: number, y: number): boolean => {
         if (x < 0 || y < 0) return true;
         if (x >= matrix[0].length || y >= matrix.length) return true;
         return false;
+    }
+
+    const isSnake = (x: number, y: number): boolean => {
+        return snakeSet.has(`${x}-${y}`);
     }
 
     const updateSnakePosition = () => {
@@ -35,8 +41,9 @@ const Board = ({ initMatrix, initSnakeArr, initSnakeSet }: { initMatrix: any[][]
         let updatedSnake: number[][] = [...snakeArr];
         const [headX, headY] = updatedSnake[0];
         const [newX, newY] = getNextPosition(headX, headY);
-        if (isWall([newX, newY])) {
+        if (isWall(newX, newY) || isSnake(newX, newY)) {
             setIsPlaying(false);
+            setIsLose(true);
             return;
         }
         updatedSnake.unshift([newX, newY]);
@@ -82,7 +89,7 @@ const Board = ({ initMatrix, initSnakeArr, initSnakeSet }: { initMatrix: any[][]
     useEffect(() => {
         let timer = 0;
         if (isPlaying) {
-            timer = setInterval(updateMatrix, 50);
+            timer = setInterval(updateMatrix, SNAKE_SPEED);
         }
         return () => clearInterval(timer);
     }, [isPlaying]);
@@ -94,6 +101,7 @@ const Board = ({ initMatrix, initSnakeArr, initSnakeSet }: { initMatrix: any[][]
 
     return (
         <>
+            {isLose && <div className="game-lost">You lose!</div>}
             <div className="board">
                 {matrix.map((row, rowIndex) =>
                     <div key={rowIndex} className="row">
