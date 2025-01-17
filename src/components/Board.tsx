@@ -47,7 +47,7 @@ const Board = ({ initMatrix, initSnakeArr, initSnakeSet }: { initMatrix: any[][]
     const getFoodPosition = () => {
         // TODO: randomize foodCount and make longer
         // maybe add a gap when food is not showing
-        if (foodCount >= 20) {
+        if (foodCount >= 30) {
             foodCount = 0;
             let randomX = -1;
             let randomY = -1;
@@ -63,24 +63,32 @@ const Board = ({ initMatrix, initSnakeArr, initSnakeSet }: { initMatrix: any[][]
 
     const updateSnakePosition = () => {
         // console.log("updating snake position");
-        let updatedSnake: number[][] = [...snakeArr];
-        const [headX, headY] = updatedSnake[0];
+        // let updatedSnake: number[][] = [...snakeArr];
+        const [headX, headY] = snakeArr[0];
         const [newX, newY] = getNextPosition(headX, headY);
+        if (isFood(newX, newY)) {
+            growSnake(newX, newY);
+            return;
+        }
         if (isWall(newX, newY) || isSnake(newX, newY)) {
             setIsPlaying(false);
             setIsLose(true);
             return;
         }
-        // TODO: add branch for if isFood
-        updatedSnake.unshift([newX, newY]);
-        const [tailX, tailY] = updatedSnake.pop() || [];
-        snakeArr = updatedSnake;
-
-        let updatedSnakeSet = new Set([...snakeSet]);
-        updatedSnakeSet.delete(`${tailX}-${tailY}`);
-        updatedSnakeSet.add(`${newX}-${newY}`);
-        snakeSet = updatedSnakeSet;
+        moveSnake(newX, newY);
     };
+
+    const growSnake = (x: number, y: number) => {
+        snakeArr.unshift([x, y]);
+        snakeSet.add(`${x}-${y}`);
+    }
+
+    const moveSnake = (x: number, y: number) => {
+        snakeArr.unshift([x, y]);
+        const [tailX, tailY] = snakeArr.pop() || [];
+        snakeSet.delete(`${tailX}-${tailY}`);
+        snakeSet.add(`${x}-${y}`);
+    }
 
     const updateMatrix = () => {
         // console.log("updating matrix");
