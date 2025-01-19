@@ -27,6 +27,7 @@ const Board = ({ initMatrix, initSnakeArr, initSnakeSet }: { initMatrix: any[][]
     const [matrix, setMatrix] = useState<any[]>(initMatrix);
     let food = [0, 0];
     let foodCount = 0;
+    let showFood = false;
     let snakeArr = initSnakeArr;
     let snakeSet = initSnakeSet;
 
@@ -44,11 +45,12 @@ const Board = ({ initMatrix, initSnakeArr, initSnakeSet }: { initMatrix: any[][]
         return x === food[0] && y === food[1];
     }
 
-    const getFoodPosition = () => {
-        // TODO: randomize foodCount and make longer
-        // maybe add a gap when food is not showing
-        if (foodCount >= 30) {
+    const updateFoodPosition = () => {
+        if (foodCount >= 90) {
             foodCount = 0;
+        }
+        if (foodCount === 30) {
+            showFood = true;
             let randomX = -1;
             let randomY = -1;
             while (isWall(randomX, randomY) || isSnake(randomX, randomY)) {
@@ -56,14 +58,17 @@ const Board = ({ initMatrix, initSnakeArr, initSnakeSet }: { initMatrix: any[][]
                 randomY = Math.floor(Math.random() * (ROW_LENGTH - 1));
             }
             food = [randomX, randomY];
-        } else {
-            foodCount++;
+        } else if (foodCount < 30) {
+            showFood = false;
         }
+        foodCount++;
+    }
+
+    const resetFood = () => {
+        foodCount = 0;
     }
 
     const updateSnakePosition = () => {
-        // console.log("updating snake position");
-        // let updatedSnake: number[][] = [...snakeArr];
         const [headX, headY] = snakeArr[0];
         const [newX, newY] = getNextPosition(headX, headY);
         if (isFood(newX, newY)) {
@@ -81,6 +86,7 @@ const Board = ({ initMatrix, initSnakeArr, initSnakeSet }: { initMatrix: any[][]
     const growSnake = (x: number, y: number) => {
         snakeArr.unshift([x, y]);
         snakeSet.add(`${x}-${y}`);
+        resetFood();
     }
 
     const moveSnake = (x: number, y: number) => {
@@ -91,16 +97,15 @@ const Board = ({ initMatrix, initSnakeArr, initSnakeSet }: { initMatrix: any[][]
     }
 
     const updateMatrix = () => {
-        // console.log("updating matrix");
         updateSnakePosition();
-        getFoodPosition();
+        updateFoodPosition();
         setMatrix(matrix => {
             let updatedMatrix = [...matrix];
             for (let i = 0; i < updatedMatrix.length; i++) {
                 for (let j = 0; j < updatedMatrix[0].length; j++) {
                     if (snakeSet.has(`${i}-${j}`)) {
                         updatedMatrix[i][j] = 'S';
-                    } else if (isFood(i, j)) {
+                    } else if (showFood && isFood(i, j)) {
                         updatedMatrix[i][j] = 'F';
                     } else {
                         updatedMatrix[i][j] = null;
@@ -112,7 +117,6 @@ const Board = ({ initMatrix, initSnakeArr, initSnakeSet }: { initMatrix: any[][]
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
-        // console.log(e.key);
         if (snakeDirection !== 'UP' && snakeDirection !== 'DOWN') {
             if (e.key === "ArrowUp") snakeDirection = 'UP';
             if (e.key === "ArrowDown") snakeDirection = 'DOWN';
@@ -135,12 +139,6 @@ const Board = ({ initMatrix, initSnakeArr, initSnakeSet }: { initMatrix: any[][]
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
     }, []);
-
-    // const getSquareClass = (content: string) => {
-    //     if (content === 'S') return 'snake';
-    //     if (content === 'F') return 'food';
-    //     return 'square';
-    // }
 
     return (
         <>
