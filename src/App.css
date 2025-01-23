@@ -6,6 +6,12 @@
   text-align: center;
 }
 
+.container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
 .board {
   display: flex;
   gap: var(--gap);
@@ -37,4 +43,19 @@
 
 .food {
   background-color: red;
+}
+
+.message-lose {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: auto;
+  background-color: #fff;
+  padding: 0 15px;
+  border: 5px solid #000;
+}
+
+.message-lose p {
+  display: inline-block;
 }

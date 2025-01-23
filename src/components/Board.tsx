@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import audioUrl from '../assets/test-trimmed.mp3';
 
 const SNAKE_SPEED = 100;
 let snakeDirection = 'UP';
@@ -20,16 +21,18 @@ const getNextPosition = (x: number, y: number) => {
 }
 
 const Board = ({ initMatrix, initSnakeArr, initSnakeSet }: { initMatrix: any[][], initSnakeArr: any[], initSnakeSet: Set<string> }) => {
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [isGameLost, setIsGameLost] = useState(false);
+    const [matrix, setMatrix] = useState<any[]>(initMatrix);
+    const ref = useRef<HTMLAudioElement | null>(null);
+
     const ROW_LENGTH = initMatrix.length;
     const COL_LENGTH = initMatrix[0].length;
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [isLose, setIsLose] = useState(false);
-    const [matrix, setMatrix] = useState<any[]>(initMatrix);
     let food = [0, 0];
     let foodCount = 0;
     let showFood = false;
-    let snakeArr = initSnakeArr;
-    let snakeSet = initSnakeSet;
+    let snakeArr = [...initSnakeArr];
+    let snakeSet = new Set(initSnakeSet);
 
     const isWall = (x: number, y: number): boolean => {
         if (x < 0 || y < 0) return true;
@@ -45,6 +48,7 @@ const Board = ({ initMatrix, initSnakeArr, initSnakeSet }: { initMatrix: any[][]
         return x === food[0] && y === food[1];
     }
 
+    // TODO: replace magic numbers with constants
     const updateFoodPosition = () => {
         if (foodCount >= 90) {
             foodCount = 0;
@@ -77,12 +81,13 @@ const Board = ({ initMatrix, initSnakeArr, initSnakeSet }: { initMatrix: any[][]
         }
         if (isWall(newX, newY) || isSnake(newX, newY)) {
             setIsPlaying(false);
-            setIsLose(true);
+            setIsGameLost(true);
             return;
         }
         moveSnake(newX, newY);
     };
 
+    // TODO: adjust to allow snake to grow more than 1 square at a time
     const growSnake = (x: number, y: number) => {
         snakeArr.unshift([x, y]);
         snakeSet.add(`${x}-${y}`);
@@ -99,6 +104,7 @@ const Board = ({ initMatrix, initSnakeArr, initSnakeSet }: { initMatrix: any[][]
     const updateMatrix = () => {
         updateSnakePosition();
         updateFoodPosition();
+        // setMatrix(constructNextBoardState());
         setMatrix(matrix => {
             let updatedMatrix = [...matrix];
             for (let i = 0; i < updatedMatrix.length; i++) {
@@ -116,7 +122,21 @@ const Board = ({ initMatrix, initSnakeArr, initSnakeSet }: { initMatrix: any[][]
         });
     };
 
+    const handleResetGame = () => {
+        resetFood();
+        setIsGameLost(false);
+        foodCount = 0;
+        showFood = false;
+        snakeArr = initSnakeArr;
+        snakeSet = initSnakeSet;
+        setMatrix(initMatrix);
+        // TODO: don't move the snake one square when resetting
+        updateMatrix();
+    }
+
+    // TODO: debounce so you can't die as easily?
     const handleKeyDown = (e: KeyboardEvent) => {
+        if (!isPlaying) setIsPlaying(true);
         if (snakeDirection !== 'UP' && snakeDirection !== 'DOWN') {
             if (e.key === "ArrowUp") snakeDirection = 'UP';
             if (e.key === "ArrowDown") snakeDirection = 'DOWN';
@@ -130,7 +150,10 @@ const Board = ({ initMatrix, initSnakeArr, initSnakeSet }: { initMatrix: any[][]
     useEffect(() => {
         let timer = 0;
         if (isPlaying) {
+            ref.current?.play();
             timer = setInterval(updateMatrix, SNAKE_SPEED);
+        } else {
+            ref.current?.pause();
         }
         return () => clearInterval(timer);
     }, [isPlaying]);
@@ -141,8 +164,8 @@ const Board = ({ initMatrix, initSnakeArr, initSnakeSet }: { initMatrix: any[][]
     }, []);
 
     return (
-        <>
-            {isLose && <div className="game-lost">You lose!</div>}
+        <div className="container">
+            {isGameLost && <div className="message-lose"><p>You lose!</p></div>}
             <div className="board">
                 {matrix.map((row, rowIndex) =>
                     <div key={rowIndex} className="row">
@@ -154,11 +177,9 @@ const Board = ({ initMatrix, initSnakeArr, initSnakeSet }: { initMatrix: any[][]
                         )}
                     </div>)}
             </div>
-            <div className="buttons">
-                <button onClick={() => setIsPlaying(true)}>Start game</button>
-                <button onClick={() => setIsPlaying(false)}>Stop game</button>
-            </div>
-        </>
+            <audio ref={ref} loop={true} src={audioUrl} typeof='audio/mpeg' />
+            {isGameLost ? <button onClick={handleResetGame}>Reset</button> : <p>Hit any key to start</p>}
+        </div>
     )
 }
 
