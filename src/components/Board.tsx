@@ -56,7 +56,8 @@ const Board = () => {
     const [isPlaying, setIsPlaying] = useState(false);
     const [isLoser, setIsLoser] = useState(false);
     const [matrix, setMatrix] = useState<any[][]>(initializeBoard);
-    const ref = useRef<HTMLAudioElement | null>(null);
+    const audioRef = useRef<HTMLAudioElement | null>(null);
+    const debounceRef = useRef<number | undefined>(undefined);
 
     let food = [0, 0];
     let foodCount = 0;
@@ -154,8 +155,21 @@ const Board = () => {
         setMatrix(initializeBoard);
     }
 
-    // TODO: debounce so you can't die as easily?
     const handleKeyDown = (e: KeyboardEvent) => {
+        const delay = 600;
+        const resetRef = () => {
+            clearTimeout(debounceRef.current), delay;
+            debounceRef.current = undefined;
+        }
+
+        if (debounceRef.current) {
+            clearTimeout(debounceRef.current);
+            debounceRef.current = setTimeout(resetRef, delay);
+            return;
+        }
+
+        debounceRef.current = setTimeout(resetRef, delay)
+
         if (!isPlaying) {
             setIsPlaying(true);
         }
@@ -172,10 +186,10 @@ const Board = () => {
     useEffect(() => {
         let timer = 0;
         if (isPlaying) {
-            ref.current?.play();
+            audioRef.current?.play();
             timer = setInterval(updateMatrix, SNAKE_SPEED);
         } else {
-            ref.current?.pause();
+            audioRef.current?.pause();
         }
         return () => clearInterval(timer);
     }, [isPlaying]);
@@ -201,8 +215,9 @@ const Board = () => {
                         )}
                     </div>)}
             </div>
-            <audio ref={ref} loop={true} src={audioUrl} typeof='audio/mpeg' />
-            {isLoser && !isPlaying ? <button onClick={handleResetGame}>Reset</button> : <p>Hit any key to start</p>}
+            <audio ref={audioRef} loop={true} src={audioUrl} typeof='audio/mpeg' />
+            {isLoser && !isPlaying && <button onClick={handleResetGame}>Reset</button>}
+            {!isLoser && !isPlaying && <p>Hit any key to start</p>}
         </div>
     )
 }
