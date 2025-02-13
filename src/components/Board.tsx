@@ -1,67 +1,25 @@
 import { useState, useEffect, useRef } from 'react';
+import { getSnakeStartPosition, getSnakeSet, getNextPosition, initializeBoard } from '../helpers/snakeHelpers';
 import audioUrl from '../assets/test-trimmed.mp3';
 
 const COLUMNS = 35;
 const ROWS = 35;
 const SNAKE_LENGTH = 6;
-
-const getSnakeStartPosition = () => {
-    const midPtX = Math.floor(COLUMNS / 2);
-    const midPtY = Math.floor(ROWS / 2);
-    return Array.from(Array(SNAKE_LENGTH), (_, index) => [midPtX, midPtY + index]);
-}
-
-const getSnakeSet = (snakeArr: number[][]) => {
-    return new Set(snakeArr.map(s => `${s[0]}-${s[1]}`));
-}
-
 const SNAKE_SPEED = 100;
 let snakeDirection = 'UP';
 
-const getNextPosition = (x: number, y: number) => {
-    if (snakeDirection === 'UP') {
-        return [x, y - 1];
-    }
-    if (snakeDirection === 'RIGHT') {
-        return [x + 1, y];
-    }
-    if (snakeDirection === 'LEFT') {
-        return [x - 1, y];
-    }
-    if (snakeDirection === 'DOWN') {
-        return [x, y + 1];
-    }
-    return [x, y];
-}
-
 const Board = () => {
-    let snakeArr = getSnakeStartPosition();
-    let snakeSet = getSnakeSet(snakeArr);
-    const initializeBoard = () => {
-        const board = Array.from(Array(COLUMNS).fill(null),
-            (_) => Array(ROWS).fill(null));
-
-        for (let i = 0; i < board.length; i++) {
-            for (let j = 0; j < board[0].length; j++) {
-                if (snakeSet.has(`${i}-${j}`)) {
-                    board[i][j] = 'S';
-                } else {
-                    board[i][j] = null;
-                }
-            }
-        }
-        return board;
-    }
-
     const [isPlaying, setIsPlaying] = useState(false);
     const [isLoser, setIsLoser] = useState(false);
-    const [matrix, setMatrix] = useState<any[][]>(initializeBoard);
+    const [matrix, setMatrix] = useState<any[][]>(() => initializeBoard(COLUMNS, ROWS, SNAKE_LENGTH));
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const debounceRef = useRef<number | undefined>(undefined);
 
     let food = [0, 0];
     let foodCount = 0;
     let showFood = false;
+    let snakeArr = getSnakeStartPosition(COLUMNS, ROWS, SNAKE_LENGTH);
+    let snakeSet = getSnakeSet(snakeArr);
 
     const isWall = (x: number, y: number): boolean => {
         if (x < 0 || y < 0) return true;
@@ -103,7 +61,7 @@ const Board = () => {
 
     const updateSnakePosition = () => {
         const [headX, headY] = snakeArr[0];
-        const [newX, newY] = getNextPosition(headX, headY);
+        const [newX, newY] = getNextPosition(headX, headY, snakeDirection);
         if (isFood(newX, newY)) {
             growSnake(newX, newY);
             return;
@@ -152,11 +110,12 @@ const Board = () => {
 
     const handleResetGame = () => {
         setIsLoser(false);
-        setMatrix(initializeBoard);
+        setMatrix(() => initializeBoard(COLUMNS, ROWS, SNAKE_LENGTH));
+        snakeDirection = 'UP';
     }
 
     const handleKeyDown = (e: KeyboardEvent) => {
-        const delay = 600;
+        const delay = 60;
         const resetRef = () => {
             clearTimeout(debounceRef.current), delay;
             debounceRef.current = undefined;
