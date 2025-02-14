@@ -41,7 +41,24 @@
   background-color: greenyellow;
 }
 
+.horz-stripes {
+  background: repeating-linear-gradient(180deg,
+      greenyellow,
+      greenyellow 2px,
+      green 2px,
+      green 4px);
+}
+
+.vert-stripes {
+  background: repeating-linear-gradient(90deg,
+      greenyellow,
+      greenyellow 2px,
+      green 2px,
+      green 4px);
+}
+
 .food {
+  border-radius: 50%;
   background-color: red;
 }
 

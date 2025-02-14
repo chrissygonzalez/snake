@@ -6,6 +6,8 @@ const COLUMNS = 35;
 const ROWS = 35;
 const SNAKE_LENGTH = 6;
 const SNAKE_SPEED = 100;
+const START_SHOW_FOOD = 30;
+const FOOD_SHOW_INTERVAL = 60;
 let snakeDirection = 'UP';
 
 const Board = () => {
@@ -15,13 +17,13 @@ const Board = () => {
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const debounceRef = useRef<number | undefined>(undefined);
 
-    let food = [0, 0];
-    let foodCount = 0;
+    let foodPosition = [0, 0];
+    let foodTick = 0;
     let showFood = false;
     let snakeArr = getSnakeStartPosition(COLUMNS, ROWS, SNAKE_LENGTH);
     let snakeSet = getSnakeSet(snakeArr);
 
-    const isWall = (x: number, y: number): boolean => {
+    const isOutOfBounds = (x: number, y: number): boolean => {
         if (x < 0 || y < 0) return true;
         if (x >= COLUMNS || y >= ROWS) return true;
         return false;
@@ -32,31 +34,31 @@ const Board = () => {
     }
 
     const isFood = (x: number, y: number): boolean => {
-        return x === food[0] && y === food[1];
+        return x === foodPosition[0] && y === foodPosition[1];
     }
 
-    // TODO: replace magic numbers with constants
     const updateFoodPosition = () => {
-        if (foodCount >= 90) {
-            foodCount = 0;
+        if (foodTick >= START_SHOW_FOOD + FOOD_SHOW_INTERVAL) {
+            foodTick = 0;
         }
-        if (foodCount === 30) {
+        if (foodTick === START_SHOW_FOOD) {
             showFood = true;
             let randomX = -1;
             let randomY = -1;
-            while (isWall(randomX, randomY) || isSnake(randomX, randomY)) {
+            // keep trying until a suitable spot is found
+            while (isOutOfBounds(randomX, randomY) || isSnake(randomX, randomY)) {
                 randomX = Math.floor(Math.random() * (COLUMNS - 1));
                 randomY = Math.floor(Math.random() * (ROWS - 1));
             }
-            food = [randomX, randomY];
-        } else if (foodCount < 30) {
+            foodPosition = [randomX, randomY];
+        } else if (foodTick < START_SHOW_FOOD) {
             showFood = false;
         }
-        foodCount++;
+        foodTick++;
     }
 
     const resetFood = () => {
-        foodCount = 0;
+        foodTick = 0;
     }
 
     const updateSnakePosition = () => {
@@ -66,7 +68,7 @@ const Board = () => {
             growSnake(newX, newY);
             return;
         }
-        if (isWall(newX, newY) || isSnake(newX, newY)) {
+        if (isOutOfBounds(newX, newY) || isSnake(newX, newY)) {
             setIsPlaying(false);
             setIsLoser(true);
             return;
@@ -121,13 +123,12 @@ const Board = () => {
             debounceRef.current = undefined;
         }
 
+        // called recently, extend wait and exit
         if (debounceRef.current) {
             clearTimeout(debounceRef.current);
             debounceRef.current = setTimeout(resetRef, delay);
             return;
         }
-
-        debounceRef.current = setTimeout(resetRef, delay)
 
         if (!isPlaying) {
             setIsPlaying(true);
@@ -140,6 +141,9 @@ const Board = () => {
             if (e.key === "ArrowLeft") snakeDirection = 'LEFT';
             if (e.key === "ArrowRight") snakeDirection = 'RIGHT';
         }
+
+        // begin wait
+        debounceRef.current = setTimeout(resetRef, delay)
     }
 
     useEffect(() => {
@@ -166,10 +170,10 @@ const Board = () => {
             <div className="board">
                 {matrix.map((row, rowIndex) =>
                     <div key={rowIndex} className="row">
-                        {row.map((square: string, squareIndex: number) =>
+                        {row.map((value: string, squareIndex: number) =>
                             <div
                                 key={`${rowIndex}-${squareIndex}`}
-                                className={['square', square === 'S' && 'snake', square === 'F' && 'food'].filter(Boolean).join(" ")}>
+                                className={['square', value === 'S' && 'vert-stripes', value === 'F' && 'food'].filter(Boolean).join(" ")}>
                             </div>
                         )}
                     </div>)}
