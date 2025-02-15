@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { getSnakeStartPosition, getSnakeSet, getNextPosition, initializeBoard } from '../helpers/snakeHelpers';
+import { getSnakeArray, getSnakeMap, getNextPosition, initializeBoard } from '../helpers/snakeHelpers';
 import audioUrl from '../assets/test-trimmed.mp3';
 
 const COLUMNS = 35;
@@ -20,8 +20,8 @@ const Board = () => {
     let foodPosition = [0, 0];
     let foodTick = 0;
     let showFood = false;
-    let snakeArr = getSnakeStartPosition(COLUMNS, ROWS, SNAKE_LENGTH);
-    let snakeSet = getSnakeSet(snakeArr);
+    let snakeArr = getSnakeArray(COLUMNS, ROWS, SNAKE_LENGTH);
+    let snakeMap = getSnakeMap(snakeArr);
 
     const isOutOfBounds = (x: number, y: number): boolean => {
         if (x < 0 || y < 0) return true;
@@ -30,7 +30,7 @@ const Board = () => {
     }
 
     const isSnake = (x: number, y: number): boolean => {
-        return snakeSet.has(`${x}-${y}`);
+        return snakeMap.has(`${x}-${y}`);
     }
 
     const isFood = (x: number, y: number): boolean => {
@@ -79,15 +79,15 @@ const Board = () => {
     // TODO: adjust to allow snake to grow more than 1 square at a time
     const growSnake = (x: number, y: number) => {
         snakeArr.unshift([x, y]);
-        snakeSet.add(`${x}-${y}`);
+        snakeMap.set(`${x}-${y}`, snakeDirection);
         resetFood();
     }
 
     const moveSnake = (x: number, y: number) => {
         snakeArr.unshift([x, y]);
+        snakeMap.set(`${x}-${y}`, snakeDirection);
         const [tailX, tailY] = snakeArr.pop() || [];
-        snakeSet.delete(`${tailX}-${tailY}`);
-        snakeSet.add(`${x}-${y}`);
+        snakeMap.delete(`${tailX}-${tailY}`);
     }
 
     const updateMatrix = () => {
@@ -97,8 +97,8 @@ const Board = () => {
             let updatedMatrix = [...matrix];
             for (let i = 0; i < updatedMatrix.length; i++) {
                 for (let j = 0; j < updatedMatrix[0].length; j++) {
-                    if (snakeSet.has(`${i}-${j}`)) {
-                        updatedMatrix[i][j] = 'S';
+                    if (snakeMap.has(`${i}-${j}`)) {
+                        updatedMatrix[i][j] = snakeMap.get(`${i}-${j}`);
                     } else if (showFood && isFood(i, j)) {
                         updatedMatrix[i][j] = 'F';
                     } else {
@@ -123,7 +123,7 @@ const Board = () => {
             debounceRef.current = undefined;
         }
 
-        // called recently, extend wait and exit
+        // called recently, restart wait and exit
         if (debounceRef.current) {
             clearTimeout(debounceRef.current);
             debounceRef.current = setTimeout(resetRef, delay);
@@ -164,17 +164,33 @@ const Board = () => {
         return () => document.removeEventListener('keydown', handleKeyDown);
     }, [isLoser]);
 
+    // TODO: break out square into its own component
     return (
         <div className="container">
             {isLoser && !isPlaying && <div className="message-lose"><p>You lose!</p></div>}
             <div className="board">
                 {matrix.map((row, rowIndex) =>
                     <div key={rowIndex} className="row">
-                        {row.map((value: string, squareIndex: number) =>
-                            <div
-                                key={`${rowIndex}-${squareIndex}`}
-                                className={['square', value === 'S' && 'vert-stripes', value === 'F' && 'food'].filter(Boolean).join(" ")}>
-                            </div>
+                        {row.map((value: string, squareIndex: number) => {
+                            if (value === 'F') {
+                                return <div
+                                    key={`${rowIndex}-${squareIndex}`}
+                                    className="square food">
+                                </div>
+                            } else if (value === 'UP' || value === 'DOWN') {
+                                return <div
+                                    key={`${rowIndex}-${squareIndex}`}
+                                    className="square vert-stripes">
+                                </div>
+                            } else if (value === 'LEFT' || value === 'RIGHT') {
+                                return <div
+                                    key={`${rowIndex}-${squareIndex}`}
+                                    className="square horz-stripes">
+                                </div>
+                            } else {
+                                return <div key={`${rowIndex}-${squareIndex}`} className="square"></div>
+                            }
+                        }
                         )}
                     </div>)}
             </div>
