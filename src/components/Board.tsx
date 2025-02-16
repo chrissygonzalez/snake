@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { getSnakeArray, getSnakeMap, getNextPosition, initializeBoard } from '../helpers/snakeHelpers';
 import audioUrl from '../assets/test-trimmed.mp3';
+import Square from './Square';
 
 const COLUMNS = 35;
 const ROWS = 35;
@@ -76,18 +77,25 @@ const Board = () => {
         moveSnake(newX, newY);
     };
 
-    // TODO: adjust to allow snake to grow more than 1 square at a time
-    const growSnake = (x: number, y: number) => {
+    const addAtHead = (x: number, y: number) => {
         snakeArr.unshift([x, y]);
         snakeMap.set(`${x}-${y}`, snakeDirection);
+    }
+
+    const deleteTail = () => {
+        const [tailX, tailY] = snakeArr.pop() || [];
+        snakeMap.delete(`${tailX}-${tailY}`);
+    }
+    // TODO: adjust to allow snake to grow more than 1 square at a time?
+    // what if adding in direction of tail hits wall or snake?
+    const growSnake = (x: number, y: number) => {
+        addAtHead(x, y);
         resetFood();
     }
 
     const moveSnake = (x: number, y: number) => {
-        snakeArr.unshift([x, y]);
-        snakeMap.set(`${x}-${y}`, snakeDirection);
-        const [tailX, tailY] = snakeArr.pop() || [];
-        snakeMap.delete(`${tailX}-${tailY}`);
+        addAtHead(x, y);
+        deleteTail();
     }
 
     const updateMatrix = () => {
@@ -117,16 +125,16 @@ const Board = () => {
     }
 
     const handleKeyDown = (e: KeyboardEvent) => {
-        const delay = 60;
+        const DELAY = 60;
         const resetRef = () => {
-            clearTimeout(debounceRef.current), delay;
+            clearTimeout(debounceRef.current), DELAY;
             debounceRef.current = undefined;
         }
 
         // called recently, restart wait and exit
         if (debounceRef.current) {
             clearTimeout(debounceRef.current);
-            debounceRef.current = setTimeout(resetRef, delay);
+            debounceRef.current = setTimeout(resetRef, DELAY);
             return;
         }
 
@@ -143,7 +151,7 @@ const Board = () => {
         }
 
         // begin wait
-        debounceRef.current = setTimeout(resetRef, delay)
+        debounceRef.current = setTimeout(resetRef, DELAY)
     }
 
     useEffect(() => {
@@ -164,33 +172,15 @@ const Board = () => {
         return () => document.removeEventListener('keydown', handleKeyDown);
     }, [isLoser]);
 
-    // TODO: break out square into its own component
+    // TODO: break board rendering out into a component, keep current component for logic
     return (
         <div className="container">
             {isLoser && !isPlaying && <div className="message-lose"><p>You lose!</p></div>}
             <div className="board">
                 {matrix.map((row, rowIndex) =>
                     <div key={rowIndex} className="row">
-                        {row.map((value: string, squareIndex: number) => {
-                            if (value === 'F') {
-                                return <div
-                                    key={`${rowIndex}-${squareIndex}`}
-                                    className="square food">
-                                </div>
-                            } else if (value === 'UP' || value === 'DOWN') {
-                                return <div
-                                    key={`${rowIndex}-${squareIndex}`}
-                                    className="square vert-stripes">
-                                </div>
-                            } else if (value === 'LEFT' || value === 'RIGHT') {
-                                return <div
-                                    key={`${rowIndex}-${squareIndex}`}
-                                    className="square horz-stripes">
-                                </div>
-                            } else {
-                                return <div key={`${rowIndex}-${squareIndex}`} className="square"></div>
-                            }
-                        }
+                        {row.map((value: string, cellIndex: number) =>
+                            <Square row={rowIndex} cell={cellIndex} value={value} />
                         )}
                     </div>)}
             </div>
