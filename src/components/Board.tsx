@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { getSnakeArray, getSnakeMap, getNextPosition, initializeBoard } from '../helpers/snakeHelpers';
 import audioUrl from '../assets/test-trimmed.mp3';
-import Square from './Square';
+import BoardGrid from './BoardGrid';
+import Message from './Message';
 
 const COLUMNS = 35;
 const ROWS = 35;
@@ -9,7 +10,7 @@ const SNAKE_LENGTH = 6;
 const SNAKE_SPEED = 100;
 const START_SHOW_FOOD = 30;
 const FOOD_SHOW_INTERVAL = 60;
-let snakeDirection = 'UP';
+let snakeDirection: 'UP' | 'DOWN' | 'LEFT' | 'RIGHT' = 'UP';
 
 const Board = () => {
     const [isPlaying, setIsPlaying] = useState(false);
@@ -46,11 +47,13 @@ const Board = () => {
             showFood = true;
             let randomX = -1;
             let randomY = -1;
+
             // keep trying until a suitable spot is found
             while (isOutOfBounds(randomX, randomY) || isSnake(randomX, randomY)) {
                 randomX = Math.floor(Math.random() * (COLUMNS - 1));
                 randomY = Math.floor(Math.random() * (ROWS - 1));
             }
+
             foodPosition = [randomX, randomY];
         } else if (foodTick < START_SHOW_FOOD) {
             showFood = false;
@@ -86,6 +89,7 @@ const Board = () => {
         const [tailX, tailY] = snakeArr.pop() || [];
         snakeMap.delete(`${tailX}-${tailY}`);
     }
+
     // TODO: adjust to allow snake to grow more than 1 square at a time?
     // what if adding in direction of tail hits wall or snake?
     const growSnake = (x: number, y: number) => {
@@ -172,21 +176,11 @@ const Board = () => {
         return () => document.removeEventListener('keydown', handleKeyDown);
     }, [isLoser]);
 
-    // TODO: break board rendering out into a component, keep current component for logic
     return (
         <div className="container">
-            {isLoser && !isPlaying && <div className="message-lose"><p>You lose!</p></div>}
-            <div className="board">
-                {matrix.map((row, rowIndex) =>
-                    <div key={rowIndex} className="row">
-                        {row.map((value: string, cellIndex: number) =>
-                            <Square row={rowIndex} cell={cellIndex} value={value} />
-                        )}
-                    </div>)}
-            </div>
+            <Message isPlaying={isPlaying} isLoser={isLoser} handleResetGame={handleResetGame} />
+            <BoardGrid matrix={matrix} />
             <audio ref={audioRef} loop={true} src={audioUrl} typeof='audio/mpeg' />
-            {isLoser && !isPlaying && <button onClick={handleResetGame}>Reset</button>}
-            {!isLoser && !isPlaying && <p>Hit any key to start</p>}
         </div>
     )
 }
