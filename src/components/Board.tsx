@@ -10,6 +10,7 @@ const SNAKE_LENGTH = 6;
 const SNAKE_SPEED = 100;
 const START_SHOW_FOOD = 30;
 const FOOD_SHOW_INTERVAL = 60;
+const DELAY = 30;
 let snakeDirection: 'UP' | 'DOWN' | 'LEFT' | 'RIGHT' = 'UP';
 
 const Board = () => {
@@ -129,7 +130,6 @@ const Board = () => {
     }
 
     const handleKeyDown = (e: KeyboardEvent) => {
-        const DELAY = 60;
         const resetRef = () => {
             clearTimeout(debounceRef.current), DELAY;
             debounceRef.current = undefined;
@@ -177,7 +177,7 @@ const Board = () => {
     }, [isLoser]);
 
     return (
-        <div className="container">
+        <div className="board">
             <Message isPlaying={isPlaying} isLoser={isLoser} handleResetGame={handleResetGame} />
             <BoardGrid matrix={matrix} />
             <audio ref={audioRef} loop={true} src={audioUrl} typeof='audio/mpeg' />
