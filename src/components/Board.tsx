@@ -3,6 +3,7 @@ import { getSnakeArray, getSnakeMap, getNextPosition, initializeBoard } from '..
 import audioUrl from '../assets/test-trimmed.mp3';
 import BoardGrid from './BoardGrid';
 import Message from './Message';
+import Controls from './Controls';
 
 const COLUMNS = 35;
 const ROWS = 35;
@@ -17,6 +18,7 @@ const Board = () => {
     const [isPlaying, setIsPlaying] = useState(false);
     const [isLoser, setIsLoser] = useState(false);
     const [matrix, setMatrix] = useState<any[][]>(() => initializeBoard(COLUMNS, ROWS, SNAKE_LENGTH));
+    const [score, setScore] = useState(SNAKE_LENGTH);
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const debounceRef = useRef<number | undefined>(undefined);
 
@@ -96,6 +98,7 @@ const Board = () => {
     const growSnake = (x: number, y: number) => {
         addAtHead(x, y);
         resetFood();
+        setScore(score => score + 1);
     }
 
     const moveSnake = (x: number, y: number) => {
@@ -127,6 +130,7 @@ const Board = () => {
         setIsLoser(false);
         setMatrix(() => initializeBoard(COLUMNS, ROWS, SNAKE_LENGTH));
         snakeDirection = 'UP';
+        setScore(SNAKE_LENGTH);
     }
 
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -178,8 +182,9 @@ const Board = () => {
 
     return (
         <div className="board">
-            <Message isPlaying={isPlaying} isLoser={isLoser} handleResetGame={handleResetGame} />
+            <Message isPlaying={isPlaying} isLoser={isLoser} />
             <BoardGrid matrix={matrix} />
+            <Controls isPlaying={isPlaying} isLoser={isLoser} handleResetGame={handleResetGame} score={score} />
             <audio ref={audioRef} loop={true} src={audioUrl} typeof='audio/mpeg' />
         </div>
     )
