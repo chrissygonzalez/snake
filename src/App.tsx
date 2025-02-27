@@ -1,12 +1,9 @@
 import './App.css';
-import Board from './components/Board';
+import SnakeGame from './components/SnakeGame';
 
 function App() {
   return (
-    <div className="game">
-      <img className="title" alt="SNAKE" src="snake.svg"></img>
-      <Board />
-    </div>
+    <SnakeGame />
   )
 }
 

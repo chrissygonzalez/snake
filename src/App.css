@@ -65,7 +65,7 @@
 }
 
 @layer global {
-  #root {
+  body {
     margin: 0 auto;
     padding: 2rem;
     place-items: center;
@@ -125,10 +125,6 @@
   .snake {
     background-color: var(--snake-green);
   }
-
-  /* .head {
-    border-radius: 8px 8px 0 0;
-  } */
 
   .food {
     border-radius: 50%;
