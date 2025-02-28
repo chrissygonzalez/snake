@@ -1,66 +1,47 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import songUrl from '../assets/8-bit-music-on-245249.mp3';
 import foodSoundUrl from '../assets/gameboy-pluck-41265.mp3'; // From https://pixabay.com
+import useGameLogic from '../hooks/useGameLogic';
+import { Direction, GameStates } from '../helpers/types';
 import { initializeBoard } from '../helpers/snakeHelpers';
 import Board from './Board';
 import Message from './Message';
 import Controls from './Controls';
-import useGameLogic from '../hooks/useGameLogic';
 
 const COLUMNS = 40;
 const ROWS = 30;
 const SNAKE_LENGTH = 6;
 const SNAKE_SPEED = 100;
 const DELAY = 70;
-let snakeDirection: 'UP' | 'DOWN' | 'LEFT' | 'RIGHT' = 'UP';
 
 const SnakeGame = () => {
     const {
         isPlaying,
-        setIsPlaying,
         isLoser, setIsLoser,
         matrix,
         setMatrix,
         score,
         setScore,
-        updateSnakePosition,
-        updateFoodPosition,
-        snakeMap,
-        showFood,
-        isFood
+        snakeDirection,
+        changeDirection,
+        gameState,
+        updateBoard,
+        startGame,
+        pauseGame,
+        endGame,
     } = useGameLogic();
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const audioRef2 = useRef<HTMLAudioElement | null>(null);
     const debounceRef = useRef<number | undefined>(undefined);
 
-    const updateMatrix = () => {
-        updateSnakePosition();
-        updateFoodPosition();
-        setMatrix(matrix => {
-            let updatedMatrix = [...matrix];
-            for (let i = 0; i < updatedMatrix.length; i++) {
-                for (let j = 0; j < updatedMatrix[0].length; j++) {
-                    if (snakeMap.has(`${i}-${j}`)) {
-                        updatedMatrix[i][j] = snakeMap.get(`${i}-${j}`);
-                    } else if (showFood && isFood(i, j)) {
-                        updatedMatrix[i][j] = 'F';
-                    } else {
-                        updatedMatrix[i][j] = null;
-                    }
-                }
-            }
-            return updatedMatrix;
-        });
-    };
-
     const handleResetGame = () => {
         setIsLoser(false);
         setMatrix(() => initializeBoard(COLUMNS, ROWS, SNAKE_LENGTH));
-        snakeDirection = 'UP';
+        // setSnakeDirection('UP');
         setScore(SNAKE_LENGTH);
     }
 
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const handleKeyDown = useCallback((e: KeyboardEvent) => {
         const resetRef = () => {
             clearTimeout(debounceRef.current), DELAY;
             debounceRef.current = undefined;
@@ -73,39 +54,57 @@ const SnakeGame = () => {
             return;
         }
 
-        if (!isPlaying) {
-            setIsPlaying(true);
+        if (gameState === GameStates.ENDED) {
+            return;
         }
-        if (snakeDirection !== 'UP' && snakeDirection !== 'DOWN') {
-            if (e.key === "ArrowUp") snakeDirection = 'UP';
-            if (e.key === "ArrowDown") snakeDirection = 'DOWN';
-        }
-        if (snakeDirection !== 'LEFT' && snakeDirection !== 'RIGHT') {
-            if (e.key === "ArrowLeft") snakeDirection = 'LEFT';
-            if (e.key === "ArrowRight") snakeDirection = 'RIGHT';
+
+        switch (e.key) {
+            case 'ArrowUp':
+                changeDirection(Direction.UP);
+                break;
+            case 'ArrowDown':
+                changeDirection(Direction.DOWN);
+                break;
+            case 'ArrowLeft':
+                changeDirection(Direction.LEFT);
+                break;
+            case 'ArrowRight':
+                changeDirection(Direction.RIGHT);
+                break;
+            case ' ':
+                if (gameState === GameStates.INITIAL || gameState === GameStates.PAUSED) {
+                    startGame();
+                } else {
+                    pauseGame();
+                }
+                break;
+            default:
+                break;
         }
 
         // begin wait
         debounceRef.current = setTimeout(resetRef, DELAY)
-    }
+    }, [snakeDirection, gameState])
+
 
     useEffect(() => {
         let timer = 0;
-        if (isPlaying) {
+        if (gameState === GameStates.RUNNING) {
             audioRef.current?.play();
-            timer = setInterval(updateMatrix, SNAKE_SPEED);
+            timer = setInterval(updateBoard, SNAKE_SPEED);
         } else {
             audioRef.current?.pause();
+            clearInterval(timer);
         }
         return () => clearInterval(timer);
-    }, [isPlaying]);
+    }, [gameState]);
 
     useEffect(() => {
         document.addEventListener('keydown', handleKeyDown);
-        if (isLoser) document.removeEventListener('keydown', handleKeyDown);
+        if (gameState === GameStates.ENDED) document.removeEventListener('keydown', handleKeyDown);
 
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [isLoser]);
+    }, [gameState]);
 
     return (
         <div className="game">

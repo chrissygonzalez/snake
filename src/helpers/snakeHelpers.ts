@@ -1,3 +1,5 @@
+import { Direction } from "./types";
+
 export const getSnakeArray = (cols: number, rows: number, length: number) => {
     const midPtX = Math.floor(cols / 2);
     const midPtY = Math.floor(rows / 2);
@@ -16,18 +18,18 @@ export const getSnakeMap = (snakeArr: number[][]) => {
     return sMap;
 }
 
-export const getNextPosition = (x: number, y: number, direction: string) => {
+export const getNextPosition = (x: number, y: number, direction: Direction) => {
     switch (direction) {
-        case 'UP': {
+        case Direction.UP: {
             return [x, y - 1];
         }
-        case 'RIGHT': {
+        case Direction.RIGHT: {
             return [x + 1, y];
         }
-        case 'LEFT': {
+        case Direction.LEFT: {
             return [x - 1, y];
         }
-        case 'DOWN': {
+        case Direction.DOWN: {
             return [x, y + 1];
         }
         default: {

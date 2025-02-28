@@ -1,14 +1,18 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { getSnakeArray, getSnakeMap, getNextPosition, initializeBoard } from '../helpers/snakeHelpers';
+import { Direction, GameStates } from '../helpers/types';
 
 const START_SHOW_FOOD = 30;
 const FOOD_SHOW_INTERVAL = 60;
 
 const useGameLogic = ({ columns = 40, rows = 30, snakeLength = 6 } = {}) => {
+    const [gameState, setGameState] = useState(GameStates.INITIAL);
     const [isPlaying, setIsPlaying] = useState(false);
     const [isLoser, setIsLoser] = useState(false);
     const [matrix, setMatrix] = useState<any[][]>(() => initializeBoard(columns, rows, snakeLength));
     const [score, setScore] = useState(snakeLength);
+    const [snakeDirection, setSnakeDirection] = useState(Direction.UP);
+    const currDirection = useRef<Direction>(snakeDirection);
 
     let foodPosition = [0, 0];
     let foodTick = 0;
@@ -58,7 +62,7 @@ const useGameLogic = ({ columns = 40, rows = 30, snakeLength = 6 } = {}) => {
 
     const updateSnakePosition = () => {
         const [headX, headY] = snakeArr[0];
-        const [newX, newY] = getNextPosition(headX, headY, snakeDirection);
+        const [newX, newY] = getNextPosition(headX, headY, currDirection.current);
         if (isFood(newX, newY)) {
             growSnake(newX, newY);
             return;
@@ -73,7 +77,7 @@ const useGameLogic = ({ columns = 40, rows = 30, snakeLength = 6 } = {}) => {
 
     const addAtHead = (x: number, y: number) => {
         snakeArr.unshift([x, y]);
-        snakeMap.set(`${x}-${y}`, snakeDirection);
+        snakeMap.set(`${x}-${y}`, currDirection);
     }
 
     const deleteTail = () => {
@@ -93,6 +97,45 @@ const useGameLogic = ({ columns = 40, rows = 30, snakeLength = 6 } = {}) => {
         deleteTail();
     }
 
+    const updateBoard = useCallback(() => {
+        updateSnakePosition();
+        updateFoodPosition();
+        setMatrix(matrix => {
+            let updatedMatrix = [...matrix];
+            for (let i = 0; i < updatedMatrix.length; i++) {
+                for (let j = 0; j < updatedMatrix[0].length; j++) {
+                    if (snakeMap.has(`${i}-${j}`)) {
+                        updatedMatrix[i][j] = snakeMap.get(`${i}-${j}`);
+                    } else if (showFood && isFood(i, j)) {
+                        updatedMatrix[i][j] = 'F';
+                    } else {
+                        updatedMatrix[i][j] = null;
+                    }
+                }
+            }
+            return updatedMatrix;
+        });
+    }, []);
+
+    const changeDirection = useCallback((direction: Direction) => {
+        if (
+            (currDirection.current === Direction.UP && direction === Direction.DOWN) ||
+            (currDirection.current === Direction.DOWN && direction === Direction.UP) ||
+            (currDirection.current === Direction.LEFT && direction === Direction.RIGHT) ||
+            (currDirection.current === Direction.RIGHT && direction === Direction.LEFT)
+        ) {
+            return;
+        }
+        setSnakeDirection(direction);
+        currDirection.current = direction;
+    }, [])
+
+    const startGame = () => setGameState(GameStates.RUNNING);
+
+    const pauseGame = () => setGameState(GameStates.PAUSED);
+
+    const endGame = () => setGameState(GameStates.ENDED);
+
     return {
         isPlaying,
         setIsPlaying,
@@ -106,7 +149,14 @@ const useGameLogic = ({ columns = 40, rows = 30, snakeLength = 6 } = {}) => {
         updateFoodPosition,
         snakeMap,
         showFood,
-        isFood
+        isFood,
+        snakeDirection,
+        changeDirection,
+        gameState,
+        updateBoard,
+        startGame,
+        pauseGame,
+        endGame
     }
 }
 
