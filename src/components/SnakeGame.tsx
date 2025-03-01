@@ -3,50 +3,34 @@ import songUrl from '../assets/8-bit-music-on-245249.mp3';
 import foodSoundUrl from '../assets/gameboy-pluck-41265.mp3'; // From https://pixabay.com
 import useGameLogic from '../hooks/useGameLogic';
 import { Direction, GameStates } from '../helpers/types';
-import { initializeBoard } from '../helpers/snakeHelpers';
 import Board from './Board';
 import Message from './Message';
 import Controls from './Controls';
 
-const COLUMNS = 40;
-const ROWS = 30;
-const SNAKE_LENGTH = 6;
 const SNAKE_SPEED = 100;
-const DELAY = 70;
+const DELAY = 100;
 
 const SnakeGame = () => {
     const {
-        isPlaying,
-        isLoser, setIsLoser,
         matrix,
-        setMatrix,
         score,
-        setScore,
         snakeDirection,
         changeDirection,
         gameState,
         updateBoard,
         startGame,
         pauseGame,
-        endGame,
+        handleResetGame
     } = useGameLogic();
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const audioRef2 = useRef<HTMLAudioElement | null>(null);
     const debounceRef = useRef<number | undefined>(undefined);
-
-    const handleResetGame = () => {
-        setIsLoser(false);
-        setMatrix(() => initializeBoard(COLUMNS, ROWS, SNAKE_LENGTH));
-        // setSnakeDirection('UP');
-        setScore(SNAKE_LENGTH);
-    }
 
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
         const resetRef = () => {
             clearTimeout(debounceRef.current), DELAY;
             debounceRef.current = undefined;
         }
-
         // called recently, restart wait and exit
         if (debounceRef.current) {
             clearTimeout(debounceRef.current);
@@ -110,9 +94,9 @@ const SnakeGame = () => {
         <div className="game">
             <img className="title" alt="SNAKE" src="snake.svg"></img>
             <div className="board">
-                <Message isPlaying={isPlaying} isLoser={isLoser} />
+                <Message gameState={gameState} />
                 <Board matrix={matrix} />
-                <Controls isPlaying={isPlaying} isLoser={isLoser} handleResetGame={handleResetGame} score={score} />
+                <Controls gameState={gameState} handleResetGame={handleResetGame} score={score} />
                 <audio ref={audioRef} loop={true} src={songUrl} typeof='audio/mpeg' />
                 <audio ref={audioRef2} src={foodSoundUrl} typeof='audio/mpeg' />
             </div>

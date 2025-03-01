@@ -2,13 +2,14 @@ import { useState, useRef, useCallback } from 'react';
 import { getSnakeArray, getSnakeMap, getNextPosition, initializeBoard } from '../helpers/snakeHelpers';
 import { Direction, GameStates } from '../helpers/types';
 
+const COLUMNS = 40;
+const ROWS = 30;
+const SNAKE_LENGTH = 6;
 const START_SHOW_FOOD = 30;
 const FOOD_SHOW_INTERVAL = 60;
 
-const useGameLogic = ({ columns = 40, rows = 30, snakeLength = 6 } = {}) => {
+const useGameLogic = ({ columns = COLUMNS, rows = ROWS, snakeLength = SNAKE_LENGTH } = {}) => {
     const [gameState, setGameState] = useState(GameStates.INITIAL);
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [isLoser, setIsLoser] = useState(false);
     const [matrix, setMatrix] = useState<any[][]>(() => initializeBoard(columns, rows, snakeLength));
     const [score, setScore] = useState(snakeLength);
     const [snakeDirection, setSnakeDirection] = useState(Direction.UP);
@@ -68,8 +69,7 @@ const useGameLogic = ({ columns = 40, rows = 30, snakeLength = 6 } = {}) => {
             return;
         }
         if (isOutOfBounds(newX, newY) || isSnake(newX, newY)) {
-            setIsPlaying(false);
-            setIsLoser(true);
+            setGameState(GameStates.ENDED)
             return;
         }
         moveSnake(newX, newY);
@@ -136,27 +136,27 @@ const useGameLogic = ({ columns = 40, rows = 30, snakeLength = 6 } = {}) => {
 
     const endGame = () => setGameState(GameStates.ENDED);
 
+    const handleResetGame = useCallback(() => {
+        setGameState(GameStates.INITIAL);
+        setMatrix(() => initializeBoard(columns, rows, snakeLength));
+        setSnakeDirection(Direction.UP);
+        currDirection.current = Direction.UP;
+        setScore(snakeLength);
+        snakeArr = getSnakeArray(columns, rows, snakeLength);
+        snakeMap = getSnakeMap(snakeArr);
+    }, []);
+
     return {
-        isPlaying,
-        setIsPlaying,
-        isLoser,
-        setIsLoser,
         matrix,
-        setMatrix,
         score,
-        setScore,
-        updateSnakePosition,
-        updateFoodPosition,
-        snakeMap,
-        showFood,
-        isFood,
         snakeDirection,
         changeDirection,
         gameState,
         updateBoard,
         startGame,
         pauseGame,
-        endGame
+        endGame,
+        handleResetGame
     }
 }
 
