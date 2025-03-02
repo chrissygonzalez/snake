@@ -140,6 +140,7 @@
     padding: 0 15px;
     background-color: var(--black);
     border: 3px solid var(--magenta);
+    text-align: center;
   }
 
   .message--hide {
@@ -151,6 +152,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 1rem 1.25rem;
+    width: 100%;
   }
 
   .controls__score {

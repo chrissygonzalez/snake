@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { getSnakeArray, getSnakeMap, getNextPosition, initializeBoard } from '../helpers/snakeHelpers';
 import { Direction, GameStates } from '../helpers/types';
 
@@ -7,13 +7,16 @@ const ROWS = 30;
 const SNAKE_LENGTH = 6;
 const START_SHOW_FOOD = 30;
 const FOOD_SHOW_INTERVAL = 60;
+const SNAKE_SPEED = 100;
 
-const useGameLogic = ({ columns = COLUMNS, rows = ROWS, snakeLength = SNAKE_LENGTH } = {}) => {
+const useGameLogic = ({ columns = COLUMNS, rows = ROWS, snakeLength = SNAKE_LENGTH, snakeSpeed = SNAKE_SPEED } = {}) => {
     const [gameState, setGameState] = useState(GameStates.INITIAL);
     const [matrix, setMatrix] = useState<any[][]>(() => initializeBoard(columns, rows, snakeLength));
     const [score, setScore] = useState(snakeLength);
     const [snakeDirection, setSnakeDirection] = useState(Direction.UP);
     const currDirection = useRef<Direction>(snakeDirection);
+    const musicRef = useRef<HTMLAudioElement | null>(null);
+    const gameTimer = useRef(-1);
 
     let foodPosition = [0, 0];
     let foodTick = 0;
@@ -69,7 +72,7 @@ const useGameLogic = ({ columns = COLUMNS, rows = ROWS, snakeLength = SNAKE_LENG
             return;
         }
         if (isOutOfBounds(newX, newY) || isSnake(newX, newY)) {
-            setGameState(GameStates.ENDED)
+            endGame();
             return;
         }
         moveSnake(newX, newY);
@@ -144,7 +147,20 @@ const useGameLogic = ({ columns = COLUMNS, rows = ROWS, snakeLength = SNAKE_LENG
         setScore(snakeLength);
         snakeArr = getSnakeArray(columns, rows, snakeLength);
         snakeMap = getSnakeMap(snakeArr);
+        resetFood();
     }, []);
+
+    // This is the game loop
+    useEffect(() => {
+        if (gameState === GameStates.RUNNING) {
+            musicRef.current?.play();
+            gameTimer.current = setInterval(updateBoard, snakeSpeed);
+        } else {
+            musicRef.current?.pause();
+            clearInterval(gameTimer.current);
+        }
+        return () => clearInterval(gameTimer.current);
+    }, [gameState]);
 
     return {
         matrix,
@@ -155,8 +171,8 @@ const useGameLogic = ({ columns = COLUMNS, rows = ROWS, snakeLength = SNAKE_LENG
         updateBoard,
         startGame,
         pauseGame,
-        endGame,
-        handleResetGame
+        handleResetGame,
+        musicRef
     }
 }
 

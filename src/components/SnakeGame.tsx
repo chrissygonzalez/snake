@@ -7,9 +7,6 @@ import Board from './Board';
 import Message from './Message';
 import Controls from './Controls';
 
-const SNAKE_SPEED = 100;
-const DELAY = 100;
-
 const SnakeGame = () => {
     const {
         matrix,
@@ -17,24 +14,25 @@ const SnakeGame = () => {
         snakeDirection,
         changeDirection,
         gameState,
-        updateBoard,
         startGame,
         pauseGame,
-        handleResetGame
+        handleResetGame,
+        musicRef
     } = useGameLogic();
-    const audioRef = useRef<HTMLAudioElement | null>(null);
+
+    const DELAY = 100;
     const audioRef2 = useRef<HTMLAudioElement | null>(null);
     const debounceRef = useRef<number | undefined>(undefined);
 
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
-        const resetRef = () => {
+        const resetDebounce = () => {
             clearTimeout(debounceRef.current), DELAY;
             debounceRef.current = undefined;
         }
         // called recently, restart wait and exit
         if (debounceRef.current) {
             clearTimeout(debounceRef.current);
-            debounceRef.current = setTimeout(resetRef, DELAY);
+            debounceRef.current = setTimeout(resetDebounce, DELAY);
             return;
         }
 
@@ -67,21 +65,8 @@ const SnakeGame = () => {
         }
 
         // begin wait
-        debounceRef.current = setTimeout(resetRef, DELAY)
+        debounceRef.current = setTimeout(resetDebounce, DELAY)
     }, [snakeDirection, gameState])
-
-
-    useEffect(() => {
-        let timer = 0;
-        if (gameState === GameStates.RUNNING) {
-            audioRef.current?.play();
-            timer = setInterval(updateBoard, SNAKE_SPEED);
-        } else {
-            audioRef.current?.pause();
-            clearInterval(timer);
-        }
-        return () => clearInterval(timer);
-    }, [gameState]);
 
     useEffect(() => {
         document.addEventListener('keydown', handleKeyDown);
@@ -96,10 +81,10 @@ const SnakeGame = () => {
             <div className="board">
                 <Message gameState={gameState} />
                 <Board matrix={matrix} />
-                <Controls gameState={gameState} handleResetGame={handleResetGame} score={score} />
-                <audio ref={audioRef} loop={true} src={songUrl} typeof='audio/mpeg' />
+                <audio ref={musicRef} loop={true} src={songUrl} typeof='audio/mpeg' />
                 <audio ref={audioRef2} src={foodSoundUrl} typeof='audio/mpeg' />
             </div>
+            <Controls gameState={gameState} handleResetGame={handleResetGame} score={score} />
         </div>
     )
 }
