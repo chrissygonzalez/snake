@@ -9,7 +9,7 @@ import Controls from './Controls';
 
 const SnakeGame = () => {
     const {
-        matrix,
+        boardState,
         score,
         snakeDirection,
         changeDirection,
@@ -80,7 +80,7 @@ const SnakeGame = () => {
             <img className="title" alt="SNAKE" src="snake.svg"></img>
             <div className="board">
                 <Message gameState={gameState} />
-                <Board matrix={matrix} />
+                <Board boardState={boardState} />
                 <audio ref={musicRef} loop={true} src={songUrl} typeof='audio/mpeg' />
                 <audio ref={audioRef2} src={foodSoundUrl} typeof='audio/mpeg' />
             </div>

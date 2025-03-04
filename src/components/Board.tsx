@@ -1,9 +1,9 @@
 import Square from './Square';
 
-const Board = ({ matrix }: { matrix: any[][] }) => {
+const Board = ({ boardState }: { boardState: any[][] }) => {
     return (
         <div className="board__grid">
-            {matrix.map((row, rowIndex) =>
+            {boardState.map((row, rowIndex) =>
                 <div key={rowIndex} className="board__row">
                     {row.map((value: string, cellIndex: number) =>
                         <Square
