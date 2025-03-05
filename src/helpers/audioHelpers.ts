@@ -1,4 +1,4 @@
-export const audioCtx = new AudioContext();
+export let audioCtx = new AudioContext();
 
 async function getFile(filepath: string) {
     const response = await fetch(filepath);
@@ -13,9 +13,19 @@ export async function loadFile(filePath: string) {
 }
 
 export function playTrack(audioBuffer: AudioBuffer) {
-    const trackSource = audioCtx.createBufferSource();
-    trackSource.buffer = audioBuffer;
-    trackSource.connect(audioCtx.destination);
-    trackSource.start();
-    return trackSource;
+    if (audioCtx.state === 'running') {
+        const trackSource = audioCtx.createBufferSource();
+        trackSource.buffer = audioBuffer;
+        trackSource.connect(audioCtx.destination);
+        trackSource.start();
+        return trackSource;
+    }
+}
+
+export function turnSoundOff() {
+    if (audioCtx.state !== 'closed') audioCtx.close();
+}
+
+export function turnSoundOn() {
+    audioCtx = new AudioContext();
 }

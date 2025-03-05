@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { getSnakeArray, getSnakeMap, getNextPosition, initializeBoard } from '../helpers/snakeHelpers';
+import { getSnakeArray, getNextPosition, initializeBoard } from '../helpers/snakeHelpers';
 import { Direction, GameStates } from '../helpers/types';
-import { loadFile, playTrack } from '../helpers/audioHelpers';
+import { loadFile, playTrack, turnSoundOff, turnSoundOn } from '../helpers/audioHelpers';
 import foodSoundUrl from '../assets/gameboy-pluck-41265.mp3'; // From https://pixabay.com
 import deathSoundUrl from '../assets/videogame-death-sound-43894.mp3';
 
@@ -19,6 +19,7 @@ const useGameLogic = ({ columns = COLUMNS, rows = ROWS, snakeLength = SNAKE_LENG
     const [boardState, setBoardState] = useState<any[][]>(() => initializeBoard(columns, rows, snakeLength));
     const [score, setScore] = useState(snakeLength);
     const [snakeDirection, setSnakeDirection] = useState(Direction.UP);
+    const [soundOn, setSoundOn] = useState(true);
     const currDirection = useRef<Direction>(snakeDirection);
     const musicRef = useRef<HTMLAudioElement | null>(null);
     const gameTimer = useRef(0);
@@ -27,14 +28,13 @@ const useGameLogic = ({ columns = COLUMNS, rows = ROWS, snakeLength = SNAKE_LENG
     let foodTick = 0;
     let showFood = false;
     let snakeArr = getSnakeArray(columns, rows, snakeLength);
-    let snakeMap = getSnakeMap(snakeArr);
 
     const isOutOfBounds = (x: number, y: number): boolean => {
         return (x < 0 || y < 0 || x >= columns || y >= rows);
     }
 
     const isSnake = (x: number, y: number): boolean => {
-        return snakeMap.has(`${x}-${y}`);
+        return snakeArr.some(([snakeX, snakeY]) => x === snakeX && y === snakeY);
     }
 
     const isFood = (x: number, y: number): boolean => {
@@ -65,7 +65,7 @@ const useGameLogic = ({ columns = COLUMNS, rows = ROWS, snakeLength = SNAKE_LENG
         foodTick = 0;
     }
 
-    const updateSnakePosition = () => {
+    const updateSnakePosition = useCallback(() => {
         const [headX, headY] = snakeArr[0];
         const [newX, newY] = getNextPosition(headX, headY, currDirection.current);
         if (isOutOfBounds(newX, newY) || isSnake(newX, newY)) {
@@ -74,22 +74,20 @@ const useGameLogic = ({ columns = COLUMNS, rows = ROWS, snakeLength = SNAKE_LENG
         }
         addAtHead(newX, newY);
         if (isFood(newX, newY)) {
-            playTrack(foodSound);
+            if (soundOn) playTrack(foodSound);
             resetFood();
             setScore(score => score + 1);
             return;
         }
         deleteTail();
-    };
+    }, [soundOn]);
 
     const addAtHead = (x: number, y: number) => {
         snakeArr.unshift([x, y]);
-        snakeMap.set(`${x}-${y}`, currDirection);
     }
 
     const deleteTail = () => {
-        const [tailX, tailY] = snakeArr.pop() || [];
-        snakeMap.delete(`${tailX}-${tailY}`);
+        snakeArr.pop();
     }
 
     const updateBoard = useCallback(() => {
@@ -99,8 +97,8 @@ const useGameLogic = ({ columns = COLUMNS, rows = ROWS, snakeLength = SNAKE_LENG
             let updatedMatrix = [...boardState];
             for (let i = 0; i < updatedMatrix.length; i++) {
                 for (let j = 0; j < updatedMatrix[0].length; j++) {
-                    if (snakeMap.has(`${i}-${j}`)) {
-                        updatedMatrix[i][j] = snakeMap.get(`${i}-${j}`);
+                    if (isSnake(i, j)) {
+                        updatedMatrix[i][j] = 'S';
                     } else if (showFood && isFood(i, j)) {
                         updatedMatrix[i][j] = 'F';
                     } else {
@@ -131,7 +129,7 @@ const useGameLogic = ({ columns = COLUMNS, rows = ROWS, snakeLength = SNAKE_LENG
 
     const endGame = () => {
         setGameState(GameStates.ENDED);
-        playTrack(deathSound);
+        if (soundOn) playTrack(deathSound);
     }
 
     const handleResetGame = useCallback(() => {
@@ -142,7 +140,6 @@ const useGameLogic = ({ columns = COLUMNS, rows = ROWS, snakeLength = SNAKE_LENG
         currDirection.current = Direction.UP;
         setScore(snakeLength);
         snakeArr = getSnakeArray(columns, rows, snakeLength);
-        snakeMap = getSnakeMap(snakeArr);
         resetFood();
     }, []);
 
@@ -161,6 +158,20 @@ const useGameLogic = ({ columns = COLUMNS, rows = ROWS, snakeLength = SNAKE_LENG
         return () => clearInterval(gameTimer.current);
     }, [gameState]);
 
+    useEffect(() => {
+        if (!soundOn) {
+            turnSoundOff();
+            if (musicRef.current) {
+                musicRef.current.pause();
+            }
+        } else {
+            turnSoundOn();
+            if (musicRef.current && gameState === GameStates.RUNNING) {
+                musicRef.current.play();
+            }
+        }
+    }, [soundOn, gameState]);
+
     return {
         boardState,
         score,
@@ -171,7 +182,9 @@ const useGameLogic = ({ columns = COLUMNS, rows = ROWS, snakeLength = SNAKE_LENG
         startGame,
         pauseGame,
         handleResetGame,
-        musicRef
+        musicRef,
+        soundOn,
+        setSoundOn,
     }
 }
 

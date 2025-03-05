@@ -1,11 +1,11 @@
 import { useEffect, useRef, useCallback } from 'react';
 import songUrl from '../assets/8-bit-music-on-245249.mp3';
-import foodSoundUrl from '../assets/gameboy-pluck-41265.mp3'; // From https://pixabay.com
 import useGameLogic from '../hooks/useGameLogic';
 import { Direction, GameStates } from '../helpers/types';
 import Board from './Board';
 import Message from './Message';
 import Controls from './Controls';
+import SoundButton from './SoundButton';
 
 const SnakeGame = () => {
     const {
@@ -17,11 +17,12 @@ const SnakeGame = () => {
         startGame,
         pauseGame,
         handleResetGame,
-        musicRef
+        musicRef,
+        soundOn,
+        setSoundOn
     } = useGameLogic();
 
-    const DELAY = 100;
-    const audioRef2 = useRef<HTMLAudioElement | null>(null);
+    const DELAY = 60;
     const debounceRef = useRef<number | undefined>(undefined);
 
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -77,12 +78,15 @@ const SnakeGame = () => {
 
     return (
         <div className="game">
-            <img className="title" alt="SNAKE" src="snake.svg"></img>
+            <div className="titleBar">
+                <h1 className="visuallyHidden">Snake Game</h1>
+                <img className="title" alt="SNAKE" src="snake.svg"></img>
+                <SoundButton soundOn={soundOn} setSoundOn={setSoundOn} />
+            </div>
             <div className="board">
                 <Message gameState={gameState} />
                 <Board boardState={boardState} />
                 <audio ref={musicRef} loop={true} src={songUrl} typeof='audio/mpeg' />
-                <audio ref={audioRef2} src={foodSoundUrl} typeof='audio/mpeg' />
             </div>
             <Controls gameState={gameState} handleResetGame={handleResetGame} score={score} />
         </div>

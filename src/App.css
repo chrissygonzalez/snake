@@ -48,9 +48,9 @@
   }
 
   button {
-    background-color: var(--snake-green);
-    color: var(--black);
-    border: unset;
+    background-color: var(--black);
+    color: var(--snake-green);
+    border: 2px solid var(--snake-green);
     font-style: inherit;
     text-transform: inherit;
     padding: 5px 15px;
@@ -171,5 +171,28 @@
     align-items: center;
     width: 4rem;
     padding-right: 0.5rem;
+  }
+
+  .titleBar {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    position: relative;
+  }
+
+  .titleBar>button {
+    position: absolute;
+    right: 0;
+    fill: var(--snake-green);
+  }
+}
+
+@layer utility {
+  .visuallyHidden {
+    position: absolute;
+    left: -10000px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
   }
 }
