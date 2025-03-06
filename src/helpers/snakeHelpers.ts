@@ -35,7 +35,7 @@ export const initializeBoard = (cols: number, rows: number, length: number) => {
     for (let i = 0; i < board.length; i++) {
         for (let j = 0; j < board[0].length; j++) {
             if (snakeArr.some(([snakeX, snakeY]) => i === snakeX && j === snakeY)) {
-                board[i][j] = 'UP';
+                board[i][j] = 'S';
             } else {
                 board[i][j] = null;
             }

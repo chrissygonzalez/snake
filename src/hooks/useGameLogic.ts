@@ -72,23 +72,15 @@ const useGameLogic = ({ columns = COLUMNS, rows = ROWS, snakeLength = SNAKE_LENG
             endGame();
             return;
         }
-        addAtHead(newX, newY);
+        snakeArr.unshift([newX, newY]);
         if (isFood(newX, newY)) {
-            if (soundOn) playTrack(foodSound);
+            playTrack(foodSound);
             resetFood();
             setScore(score => score + 1);
             return;
         }
-        deleteTail();
-    }, [soundOn]);
-
-    const addAtHead = (x: number, y: number) => {
-        snakeArr.unshift([x, y]);
-    }
-
-    const deleteTail = () => {
         snakeArr.pop();
-    }
+    }, [soundOn]);
 
     const updateBoard = useCallback(() => {
         updateSnakePosition();
@@ -129,7 +121,7 @@ const useGameLogic = ({ columns = COLUMNS, rows = ROWS, snakeLength = SNAKE_LENG
 
     const endGame = () => {
         setGameState(GameStates.ENDED);
-        if (soundOn) playTrack(deathSound);
+        playTrack(deathSound);
     }
 
     const handleResetGame = useCallback(() => {
