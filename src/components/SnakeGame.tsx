@@ -11,7 +11,6 @@ const SnakeGame = () => {
     const {
         boardState,
         score,
-        snakeDirection,
         changeDirection,
         gameState,
         startGame,
@@ -24,20 +23,17 @@ const SnakeGame = () => {
 
     const DELAY = 60;
     const debounceRef = useRef<number | undefined>(undefined);
+    const resetDebounce = () => {
+        clearTimeout(debounceRef.current);
+        debounceRef.current = undefined;
+    }
 
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
-        const resetDebounce = () => {
-            clearTimeout(debounceRef.current), DELAY;
-            debounceRef.current = undefined;
-        }
-        // called recently, restart wait and exit
+        if (gameState === GameStates.ENDED) return;
+        // called too recently, restart wait and exit
         if (debounceRef.current) {
             clearTimeout(debounceRef.current);
             debounceRef.current = setTimeout(resetDebounce, DELAY);
-            return;
-        }
-
-        if (gameState === GameStates.ENDED) {
             return;
         }
 
@@ -67,7 +63,7 @@ const SnakeGame = () => {
 
         // begin wait
         debounceRef.current = setTimeout(resetDebounce, DELAY)
-    }, [snakeDirection, gameState])
+    }, [gameState])
 
     useEffect(() => {
         document.addEventListener('keydown', handleKeyDown);
@@ -77,8 +73,9 @@ const SnakeGame = () => {
     }, [gameState]);
 
     return (
-        <div className="game">
+        <main className="game">
             <div className="titleBar">
+                {/* Heading is for screen readers */}
                 <h1 className="visuallyHidden">Snake Game</h1>
                 <img className="title" alt="SNAKE" src="snake.svg"></img>
                 <SoundButton soundOn={soundOn} setSoundOn={setSoundOn} />
@@ -89,7 +86,7 @@ const SnakeGame = () => {
                 <audio ref={musicRef} loop={true} src={songUrl} typeof='audio/mpeg' />
             </div>
             <Controls gameState={gameState} handleResetGame={handleResetGame} score={score} />
-        </div>
+        </main>
     )
 }
 

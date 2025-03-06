@@ -3,9 +3,7 @@ import SnakeGame from './components/SnakeGame';
 
 function App() {
   return (
-    <main>
-      <SnakeGame />
-    </main>
+    <SnakeGame />
   )
 }
 
