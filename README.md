@@ -1,50 +1,18 @@
-# React + TypeScript + Vite
+# Snake 🐍
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+### Description
 
-Currently, two official plugins are available:
+A simple Snake game built in React and Typescript
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### How to install
+Download the repo, then `cd` into the `snake` folder. Run `npm install` to install the packages, then run `npm dev` to start the app. 
 
-## Expanding the ESLint configuration
+### How to play
+Start / pause the game with the space bar. Direct the snake with the arrow keys. Try to eat the food without hitting a wall or yourself (the snake).
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
-
-- Configure the top-level `parserOptions` property like this:
-
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
-
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
-
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
-
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
-```
+### How it works
+* The board state is a 2D array representing the content of each square on the board.
+* Game state is a Typescript enum with four possibilities
+* When the game starts, the location of the snake and the food are updated on a recurring interval. Updating the game state rerenders the board and moves the snake in the current direction of travel.
+* Functions within the `useGameLogic` custom hook handle the various game play events, including snake, food, and game state management
+* An HTML `audio` element plays the background music (all sounds come from [Pixabay](https://pixabay.com/)), while the food and game over sound effects are triggered using the Web Audio API

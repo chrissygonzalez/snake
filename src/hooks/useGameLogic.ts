@@ -17,7 +17,7 @@ const deathSound = await loadFile(deathSoundUrl);
 const useGameLogic = ({ columns = COLUMNS, rows = ROWS, snakeLength = SNAKE_LENGTH, snakeSpeed = SNAKE_SPEED } = {}) => {
     const [gameState, setGameState] = useState(GameStates.INITIAL);
     const [boardState, setBoardState] = useState<any[][]>(() => initializeBoard(columns, rows, snakeLength));
-    const [score, setScore] = useState(snakeLength);
+    const [score, setScore] = useState(0);
     const [snakeDirection, setSnakeDirection] = useState(Direction.UP);
     const [soundOn, setSoundOn] = useState(true);
     const currDirection = useRef<Direction>(snakeDirection);
